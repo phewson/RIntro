@@ -1,0 +1,126 @@
+---
+title: "Introduction to R"
+author: Paul Hewson
+date: August 5th 2014
+output: ioslides_presentation
+---
+
+# Introduction to R
+
+
+## What is R?
+
+- An environment for statistical data analysis
+- Interactive (command line) data analysis
+- Programming (scripting?) language
+
+## History of R
+
+- Ross Ihaka and Robert Gentleman in Aukland wanted a teaching alternative to S (S-Plus).   Worked under GPL and allowed a core team to form.
+- There are variants to enable faster/less memory restricted - for example Luke Tierney has been working on a byte code compiler
+
+
+## How do you use R?
+
+- Emacs has a great IDE - Emacs speaks statistics
+- Rstudio is a very comprehensive IDE
+- Various GUI builders possible - if you wanted to construct button clicking possibilities for non-programming colleagues e.g. Shiny, Tcl-Tk (and many many more)
+
+## How do you develop in R
+
+- There are > 3000 add on packages, and derivative projects such as Bioconductor
+- There are two methods S3 and S4 formalising some kind of object oriented programming
+- There are many ways to drop down into Fortran or C/C++ if you need to speed up a particular routine
+- There are many add on routines for parallel functioning (see relevant task view)
+
+## What are we going to do this afternoon
+
+- Introduce R to do some statistical modelling
+- At the end, we will have a quick plenary on the statistical concepts
+- For now, this is a programming / command line scripting exercise.
+
+
+
+
+# Basic R
+
+
+## Assignment to variables
+```{r}
+x <- 1
+y <- 1
+x + y
+z <- x + y
+y <- 2
+z
+```
+## Vectors and arrays
+
+
+```{r}
+x <- c(1,3)
+y <- matrix(c(1,2,3,4),2,2)
+
+x * y
+x %*% y
+```
+
+
+## Looping
+
+- THis should be familiar, but don't.
+
+
+
+
+
+```{r}
+out <- rep(0,10)
+#out <- vector("numeric", 10)
+for (i in 1:10){
+out[i] <- i^2
+}
+out
+sum(out)
+```
+
+```{r}
+x <- c(1:10)
+xsquare <- 0
+
+output <- vapply(x,function(x){x^2}, xsquare)
+output
+sum(output)
+```
+
+
+## Now do that again
+
+- With a sensible problem
+- With a large number of $n$
+- Compare timings
+
+
+
+# Data
+
+```{r}
+#nyc.df <- read.csv("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv")
+#write.csv(nyc.df, row.names = FALSE, "c:\\Users\\phewson\\nyc.csv")
+nyc.df <- read.csv("c:\\Users\\phewson\\nyc.csv")
+
+head(nyc.df)
+
+pairs(nyc.df[,-c(1,2,7)])
+nyc.lm1 <- lm(Price ~ Food + Decor + Service, data = nyc.df)
+summary(nyc.df)
+plot(nyc.lm1)
+```
+
+
+
+
+
+
+
+
