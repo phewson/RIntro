@@ -186,7 +186,7 @@ str(a.simulation)
 
 ## There are three tutorial sheets to try out
 
-- Rdata: introduces some data handling / model fitting
+- ModellingTutorial: introduces some data handling / model fitting
 - Rprogramming: sets a programming exercise
 - SomeGGPlotIdeas: introduces another way of visualising data
 

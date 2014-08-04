@@ -1,0 +1,185 @@
+The Beverton-Holt model
+=======================
+
+
+We are going to walk through an example of a non-linear model, specifically the so-called ``Beverton-Holt'' model.   This is a model for fish recruitment.   We are interested in the Spawning stock (spawning biomass) and the resulting number of fish (recruitment)
+
+\begin{equation}
+R = f(S, (\alpha, k)) = \frac{\alpha S}{1 + S/k}
+\end{equation}
+
+
+The data we are going to consider are in the R library \texttt{nlrwr}.   
+
+```{r, warning=FALSE, echo=FALSE}
+#install.packages("nlrwr")
+library(nlrwr)
+data(M.merluccius)
+```
+
+
+Because the data are contained within the package, we need to use data() to make the data visible.
+
+
+Plotting the data
+-----------------
+
+
+### Exercise
+
+Start by plotting the data.   
+
+- The standard R function plot() will work find.
+
+- You want to plot num.fish on the y axis and spawn.biomass on the x axis.
+
+- You can set the axis labels and title with xlab = "label", ylab = "label" and main = "Title" within the function call
+
+
+
+### Solution
+
+
+```{r}
+plot(num.fish ~ spawn.biomass, data = M.merluccius, 
+     xlab = "Spawning biomass (1000 tonnes)", 
+     ylab = "Recruitment (million fish)")
+```
+
+
+
+Fitting the model
+-----------------
+
+
+For non-linear models, you need to specify the model, and use a function called nls.   Any problems type ?nls for help.
+
+
+```{r}
+try(mm.bh <-  nls(num.fish ~ spawn.biomass * alpha/(1+spawn.biomass/k), 
+              data = M.merluccius, 
+              start = list(alpha = 0, k = 0)))
+
+```
+
+
+Note for non-linear models you need to specify initial values of the parameters.   The example given here does not have suitable values - can you find suitable ones.   In order to do this it helps to know what the parameters mean.   We consider the proliferation rate and carrying capacity of the population.
+
+
+
+### Solution
+
+
+```{r}
+mm.bh <-  nls(num.fish ~ spawn.biomass * alpha/(1+spawn.biomass/k), 
+              data = M.merluccius, 
+              start = list(alpha = 5, k = 50))
+
+```
+
+
+
+
+There is a rather nice package called *nlstools* which has a convenient plotting function that lets us plot the data AND the model we just fitted.
+
+
+```{r}
+require(nlstools)
+overview(mm.bh)
+plotfit(mm.bh)
+```
+
+So far so good.   But now we want to do ``inference'' on those parameters.
+
+
+The first thing we can do (for ``pedagogic purposes'') is to plot a contour of RSS values for possible combinations of the two parameters.
+
+```{r}
+contour <- nlsContourRSS(mm.bh)
+plot(contour)
+```
+
+This is intended more to give us some idea that the function we have been maximising has rather a complicated relationship with the two parameter values.   And hence that we might need to be careful with the interval estimates.
+
+
+Interval Estimates
+-------------------
+
+We've talked about confidence intervals.   There are different ways of computing these.
+
+### Wald Intervals
+
+If you are very lucky, you might have the *nlrwr* package available to you - if so it calculates the Wald intervals for you.   If not you have to do this by hand (which is better exam practice anyway).
+
+```{r}
+require(nlrwr) ## lucky if this works
+confint2(mm.bh)
+
+summary(mm.bh)
+```
+
+
+Hopefully though, that contour plot warned you that these estimates might be problematic.
+
+### Profile intervals
+
+We met these profile intervals when we examined non-linear models.   So this should be straightforward, except that now you know exactly where the lines come from.
+
+The profile t-statistic is obtained by calculating:
+
+$$\tau(\beta_j) = \mbox{sign} (\beta_j - \hat{\beta_j}) \frac{\sqrt{RSS(\beta_j) - RSS(\hat{\beta_j})}}{s}$$
+
+So we obtain the lines from relevant quantiles of a t-distribution with suitable degrees of freedom.
+
+```{r}
+require(nlstools)
+mm.bh.profile <- profile(mm.bh)
+plot(mm.bh.profile)
+
+confint(mm.bh)
+```
+
+
+
+
+### Bootstrapping
+
+
+For the method we are going to use (pairs based resampling, percentile based confidence intervals), bootstrapping a non-linear model is trivial.
+
+
+```{r}
+require(nlstools)
+mm.bh.boot <- nlsBoot(mm.bh)
+summary(mm.bh)
+summary(mm.bh.boot)
+
+plot(mm.bh.boot)
+
+```
+
+Extension Activity
+------------------
+
+### Reparameterisation
+
+This is where life get's interesting.   If you search the web you can find alternative formulations for the Beverton-Holt model.   Can you find and fit a formulation that has better behaving Wald intervals.
+
+### Alternatives
+
+- Deriso model:
+
+$$(S, (\alpha, c, k)) = \alpha S \left( 1 -\frac{cS}{k} \right)^{1/c}$$
+
+(Hint, try start =  list(alpha = 4.4, k = 106, c=0.86))
+
+- Ricker model:
+
+$$f(S, (\alpha, k)) = \alpha S \exp(-kS)$$
+(Hint: try start= list(alpha = 5, k = 50))
+
+- Shepherd model
+
+$$f(S, (\alpha, c, k)) = \frac{\alpha S}{1 + \left( \frac{S}{k} \right)^c}$$
+
+(Hint: try start = list(alpha = 3.87, k=61.72, c = 2.25), also add within the function call \texttt{control=nls.control(maxiter=100)}
