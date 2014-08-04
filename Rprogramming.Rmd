@@ -74,5 +74,9 @@ plot(c(1:n), out, xlab = "Iteration", ylab = "Estimate", type = "l")
 
 ```
 
+## Exercise
 
-Now repeat this for either of the problems in this worksheet.
+- Produce a simular plot for either / both of the problems in this worksheet.
+- Write your Monte Carlo integrator as an S3 class
+
+
