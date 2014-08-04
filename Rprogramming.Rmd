@@ -1,0 +1,78 @@
+---
+title: "Monte Carlo methods"
+output: html_document
+---
+
+This is a more open ended tutorial sheet.   In the lecture we described estimating $\pi$ by Monte Carlo methods.   That is approximately the worst way of estimating $\pi$.   So we will have a look at a slightly more sensible idea, namely Monte Carlo integration.
+
+We know that $E[X] = \int_{\infty}^{\infty} x f(x) dx$.   We also know that we can estimate $E[X]$ by the sample mean.   We can therefore turn this idea on its head.   If we can simulate from $f(x)$ we can approximate $\int_{\infty}^{\infty} x$.
+
+Let's start with a trival example.   
+
+## Find $\int_0^1 e^x dx$
+
+We know that a Uniform random variable has support in the range $0$ to $1$ and also that it's density is $1$.   So all we need to do is:
+
+1. Simulate $u \sim U(0,1)$
+2. Calculate $y=e^u$
+3. Find the sample mean of $y$
+
+```{r}
+u <- runif(1000)
+mean(exp(u))
+```
+
+
+
+Now for a slightly less trivial example:
+
+## Find $\int_{1}^{\infty} \frac{1}{\sqrt{2 \pi}} e^x dx$
+
+This is a simple hit an miss procedure.
+
+1. Simulate $x \sim Normal(0,1)$
+2. Find the proportion of these values that are greater than 1.
+
+```{r}
+x <- rnorm(1000)
+length(x[x>1])/1000
+```
+
+We can check this result
+
+```{r}
+pnorm(1, lower.tail = FALSE)
+```
+
+
+
+These are approximations
+------------------------
+
+Although there are good reasons for using Monte Carlo integration (for high dimensional problems) it should be obvious that the method comes with a random error.   How does the error relate to sample size.
+
+Your problem
+------------
+
+
+For any of the problems set out above (or others of your choosing) write a script / programme / S3 class / other that will perform a Monte Carlo estimate based on a range of sample sizes.   Plot the estimate against the sample size.
+
+
+```{r}
+## set sample size (from 1 to n)
+n <- 1000
+## create storage vector for results
+out <- rep(0,n)
+## run a loop and estimate pi
+for (i in 1:n){
+x <- runif(i, -1,1)
+y <- runif(i,-1,1)
+out[i] <- length(x[x^2+y^2<1])/i*4
+}
+## plot results
+plot(c(1:n), out, xlab = "Iteration", ylab = "Estimate", type = "l")
+
+```
+
+
+Now repeat this for either of the problems in this worksheet.
