@@ -21,3 +21,4 @@ I have added the following libraries:
 - ggplot2
 - curl
 - arm
+- nlrwr
