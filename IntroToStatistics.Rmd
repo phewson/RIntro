@@ -1,0 +1,134 @@
+---
+title: "Introduction to Statistics"
+author: Paul Hewson
+date: August 5th 2014
+output: ioslides_presentation
+---
+
+# Introduction to Statistics
+
+
+
+## Data
+
+```{r, echo = FALSE}
+#nyc.df <- read.csv("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv")
+#write.csv(nyc.df, row.names = FALSE, "c:\\Users\\phewson\\nyc.csv")
+nyc.df <- read.csv("c:\\Users\\phewson\\nyc.csv")
+
+head(nyc.df)
+```
+
+## What it looks like
+
+```{r}
+pairs(nyc.df[,-c(1,2,7)])
+```
+
+
+
+
+
+## Questions?
+
+- Are East restaurants more expensive
+- What is the most imporant feature (Decor / Service / Food) in terms of price?
+- If I hire a better chef, how much more can I charge for a meal?
+
+## What are we asking from the data?
+
+- Description
+- Explanation
+- Prediction
+
+
+## What is the role of statistical inference
+
+- Description - we don't need any statistical model
+- For explanation and prediction we need a model
+- We regard our data as a sample and we try to make a statement about the population which generated that model
+- Big data - population / meta-population
+
+
+
+
+## Models
+
+- $Y \sim Normal(\mu, \sigma^2)$
+- $Y = \beta_0 + \beta_1 x_{i1} + \cdots + \beta_p x_{ip} + \epsilon_i$
+
+and even
+
+- $Y_i \sim Binom(n_i, p_i)$
+with
+$logit(p_i)=\beta_0 + \beta_1 x_{i1} + \cdots + \beta_p x_{ip}$
+
+
+
+## Fitting a model
+
+```{r}
+nyc.lm1 <- lm(Price ~ Food + Decor + Service, data = nyc.df)
+summary(nyc.lm1)
+```
+
+## Checking the model assumptions
+
+```{r, echo = FALSE, results='hide'}
+par(mfrow = c(2,2))
+plot(nyc.lm1)
+```
+
+## Having checked the assumptions
+
+- The assumptions look reasonable
+- So we can interrogate the model
+- Service is not "statistically significant"
+- Can we employ Basil Fawlty as a waiter?
+
+
+## Interpreting statistical significance
+
+- p-values are a measure of evidence against the null
+- They are based on simulating a virtual world where the null is tree, and determining the plausibility of the data we actually got 
+- Large p-values tell us the data are not inconsistent with the null - maybe we didn't look hard enough / have a large enough sample. 
+- Small p-values suggest data are inconsistent with the null but maybe we have too large a sample size / maybe alternative explanations are no better
+
+## Confidence intervals
+
+A 95% confidence interval is wider than a 90% confidence interval
+
+- TRUE or 
+- FALSE
+
+## What does "Confidence Interval" mean?
+
+```{r}
+output <- rep(0,250)
+for (i in 1:1000){
+  ## Simulate data from a population
+x <- rnorm(1000,5,2)
+## Computer upper and lower 95% CI
+upper <- mean(x)+1.96*sd(x)/sqrt(1000)
+lower <- mean(x)-1.96*sd(x)/sqrt(1000)
+## Check CI overlaps "true" value
+output[i] <- ifelse(upper>5 && lower<5,1,0)
+}
+mean(output)
+```  
+
+
+
+## Using confidence intervals
+
+```{r, echo = FALSE, results = 'hide', message=FALSE}
+library(arm)
+coefplot(nyc.lm1)
+```
+
+
+
+
+
+
+
