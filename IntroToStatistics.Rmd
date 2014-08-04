@@ -11,17 +11,19 @@ output: ioslides_presentation
 
 ## Data
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, message=FALSE}
 #nyc.df <- read.csv("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv")
-#write.csv(nyc.df, row.names = FALSE, "c:\\Users\\phewson\\nyc.csv")
-nyc.df <- read.csv("c:\\Users\\phewson\\nyc.csv")
 
+library(RCurl)
+data <- getURL("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv", ssl.verifypeer=0L, followlocation=1L)
+writeLines(data,'tempnyc.csv')
+nyc.df <- read.csv('tempnyc.csv', row.names = 1)
 head(nyc.df)
 ```
 
 ## What it looks like
 
-```{r}
+```{r, echo=FALSE}
 pairs(nyc.df[,-c(1,2,7)])
 ```
 
@@ -56,6 +58,8 @@ pairs(nyc.df[,-c(1,2,7)])
 
 - $Y \sim Normal(\mu, \sigma^2)$
 - $Y = \beta_0 + \beta_1 x_{i1} + \cdots + \beta_p x_{ip} + \epsilon_i$
+with 
+$\epsilon_i \sim Normal(0, \sigma^2)$
 
 and even
 
@@ -127,6 +131,143 @@ coefplot(nyc.lm1)
 ```
 
 
+# You don't have to do this p-value / CI stuff
+
+- Bayesian inference is extremely popular in modern applications.
+
+- Here's a very simple sketch.   We have some data that could plausibly me modelled as a Normal distribution (coffee dispensed by a vending machine)
+
+- We no longer believe the parameters are fixed but unknown constants.   Instead we need to state a prior distribution  for parameter $\mu$.   For example, I could state that it is $Normal(5,5^2)$.   This decision worries a few people.
+
+
+## Now imagine we have some data.
+
+- Using Bayes rule we basically form:
+
+$Posterior \propto Prior \times Likehood$
+
+
+- Everything we want to say about $\mu$ is know summarised by this Posterior distribution.   As it is a pdf we can directly estimate the probahility that $\mu$ is greater than some value.
+
+
+
+
+
+
+## An illustration with $n=15$
+
+
+```{r, echo = FALSE, results='hide'}
+sigma2prior <- 5
+sigma2y <- 10
+muprior <- 5
+n <- 15
+y <- rnorm(n, 8, 2)
+xbar <- mean(y)
+
+sigmapost <- 1 / ( (n / sigma2y) + (1/sigma2prior))
+mupost <- sigmapost * ((muprior/sigma2prior) + ((n * xbar)/sigma2y))
+
+hist(y, freq = FALSE, ylim = c(0,0.6), col = "pink", main  = "Data", xlim = c(0,20))
+abline(v=mean(y), lwd  = 2, col = "red")
+
+#curve(dnorm(x, muprior, sigma2prior), add= TRUE, col = "blue", lwd = 2, lty = 2)
+#curve(dnorm(x, mupost, sigmapost), add = TRUE, col = "red", lwd = 2, lty = 3)
+```
+
+
+## An illustration with $n=15$
+
+
+```{r, echo = FALSE, results='hide'}
+sigma2prior <- 5
+sigma2y <- 10
+muprior <- 5
+n <- 15
+y <- rnorm(n, 8, 2)
+xbar <- mean(y)
+
+sigmapost <- 1 / ( (n / sigma2y) + (1/sigma2prior))
+mupost <- sigmapost * ((muprior/sigma2prior) + ((n * xbar)/sigma2y))
+
+hist(y, freq = FALSE, ylim = c(0,0.6), col = "pink", main  = expression(paste("Data and prior for ", mu)), xlim = c(0,20))
+#abline(v=mean(y), lwd  = 2, col = "red")
+
+curve(dnorm(x, muprior, sigma2prior), add= TRUE, col = "blue", lwd = 2, lty = 2)
+#curve(dnorm(x, mupost, sigmapost), add = TRUE, col = "red", lwd = 2, lty = 3)
+```
+
+## An illustration with $n=15$
+
+
+```{r, echo = FALSE, results='hide'}
+sigma2prior <- 5
+sigma2y <- 10
+muprior <- 5
+n <- 15
+y <- rnorm(n, 8, 2)
+xbar <- mean(y)
+
+sigmapost <- 1 / ( (n / sigma2y) + (1/sigma2prior))
+mupost <- sigmapost * ((muprior/sigma2prior) + ((n * xbar)/sigma2y))
+
+hist(y, freq = FALSE, ylim = c(0,0.6), col = "pink", main  = expression(paste("Data, prior and posterior for ", mu)), xlim = c(0,20))
+#abline(v=mean(y), lwd  = 2, col = "red")
+
+curve(dnorm(x, muprior, sigma2prior), add= TRUE, col = "blue", lwd = 2, lty = 2)
+curve(dnorm(x, mupost, sigmapost), add = TRUE, col = "red", lwd = 2, lty = 3)
+legend("topright", lty = c(2,3), col = c("blue", "red"), legend = c("Prior", "Posterior"))
+
+```
+
+
+
+
+## "Bad" prior but sample size $n=50$
+
+
+```{r, echo = FALSE, results='hide'}
+sigma2prior <- 3
+sigma2y <- 2
+muprior <- 25
+n <- 50
+y <- rnorm(n, 8, 2)
+xbar <- mean(y)
+
+sigmapost <- 1 / ( (n / sigma2y) + (1/sigma2prior))
+mupost <- sigmapost * ((muprior/sigma2prior) + ((n * xbar)/sigma2y))
+
+hist(y, freq = FALSE, ylim = c(0,0.6), col = "pink", main  = expression(paste("Data, prior and posterior for ", mu)), xlim = c(0,30))
+#abline(v=mean(y), lwd  = 2, col = "red")
+
+curve(dnorm(x, muprior, sigma2prior), add= TRUE, col = "blue", lwd = 2, lty = 2)
+curve(dnorm(x, mupost, sigmapost), add =TRUE, col = "red", lwd = 2, lty = 3)
+legend("topright", lty = c(2,3), col = c("blue", "red"), legend = c("Prior", "Posterior"))
+
+```
+
+
+## Priors
+
+- Don't wish to make light of the problem, careful selection of priors is important
+- At the very least in this case we would also want (say) an inverse Gamma distribution for the variance
+- But as $n$ increases, the posterior is dominated by the likelihood
+
+
+## The Posterior
+
+- The posterior is a pdf - in the second case a $Normal(8.06, 0.039)$
+- I can directly answer the question what is the probability that $\mu < 8$ as `r pnorm(8, 8.06, 0.039, lower.tail = TRUE)`
+
+
+# Conclusions
+
+## What is "statistics"
+
+- I would suggest statistics is the art of making a statement about a (meta) population based on a sample of data - either for explanatory or predictive reasons
+- Data manipulation is the easiest part of the exercise
+- Carefully formulating statistical / probability models, ensuring assumptions are reasonable and drawing conclusions are much harder
+- Deming drew a triangle - the kinds of errors we can handle with statisical methods are usually much less severe than the errors (bias) we cannot handle
 
 
 
