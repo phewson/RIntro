@@ -1,0 +1,192 @@
+A very short introduction to GGplot
+========================================================
+
+
+GG Plot was written as an implementation of the the [Grammar of Graphics](http://www.cs.uic.edu/~wilkinson/TheGrammarOfGraphics/GOG.html) - a set of proposals by Leland Wilkinson to abstract what we do in constructing data visuals.   The R implementation exists in a package ggplot2, and more information including accompanying text books are described at the package [homepage](http://ggplot2.org/)
+
+
+
+Demonstration: US Arrest Rates
+-------------------------------
+
+We're going to start by examining some data on imprisonment rates in the US.   We'll start by considering the relationship between the proportion of blacks in each state, and the numbers incarcerated.   The social implications of these data are obvious.   First, we need to load the data.   It is simple to load the data in interactive mode, but a little more involved to load the data for knitting.   The line for interactive mode has been commented out in the code snippet below.
+
+```{r}
+### This next line works perfectly well with Interactive use.
+#usprison.df <- read.csv("http://dl.dropboxusercontent.com/u/12691674/stat2402/USPrisons.csv", row.names = 1)
+
+### However, these next four lines are needed to read in knitting mode
+library(RCurl)
+data <- getURL("http://dl.dropboxusercontent.com/u/12691674/stat2402/USPrisons.csv",
+               ssl.verifypeer=0L, followlocation=1L)
+writeLines(data,'temp.csv')
+usprison.df <- read.csv('temp.csv', row.names = 1)
+```
+
+
+We need to do a little data manipulation.   As loaded, the column for "South" comprises zeros and ones - and R assumes these are numbers.   We need to manually tell R that these are factors, and have labels "Not South"" and "South"" respectively.
+
+```{r}
+usprison.df$south <- factor(usprison.df$south, levels = c(0:1), labels = c("Not South", "South"))
+```
+
+Next, we will examine a summary of these data
+
+
+```{r}
+head(usprison.df)
+summary(usprison.df)
+```
+
+Hopefully you can remember a little about correlation, from both STAT1401 as well as perhaps from before. The idea of the Pearson correlation coefficient is to create a statistic that takes on values between $-1$ and $1$ depending on whether two variables
+are negatively correlated (as one goes up the other goes down), positively correlated (as one goes up, the other goes up) or $0$ (there is no apparent linear relationship between the two variables).
+
+
+$r_jk = \frac{1}{n} \sum_{i=1}^n \frac{(x_i - \bar{x})(y_i - \bar{y})}{s_x s_y}$
+
+We will quite often encounter situations where we are considering a number of variables (more than $2$), so we have to decipher a correlation matrix.
+
+```{r}
+cor(usprison.df[, -8])
+```
+
+
+You should see for example that the correlation between Incarceration rate (inc) and Unemployment rate (unemp) is 0:311 You should also see that you can read this value from the first row, sixth column) or from the sixth row, first column.
+
+### Covariance matrix
+
+Perhaps a new term that you've not met before is the Covariance. The clue is in the name. It is some measure of the way two variables, x and y, vary together.
+
+
+$s_{xy} = \frac{1}{n} \sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})$
+
+(recall that the denition of the variance is $1/n \sum_{i=1}^n (x_i \bar{x})^2$, in other words the way a variable "covaries"" with itself. As with correlation, we need to examine covariance matrices:
+
+```{r}
+cov(usprison.df[, -8])
+```
+
+
+On the diagonal entries, you have the variance as you've met before. So the sample variance of Property values (*property*) is 1231544.2535. The variance in incarceration rate (*inc*) is also high, and it should come as no surprise that the Covariance between these two is also high (they had a correlation of $0.4$, and the covariance is estimated as $68323.2718$. It is positive because as one increases the other increases, it is large because there is a lot of variance in the two variables. Contrast this with the covariance of unemployment ($unemp$) with some measure of
+poverty ($proverty$).
+
+
+Scatterplot matrices
+--------------------
+
+You will have been drawing scatterplots for the last ten years of your life; now you get to the meet the pairwise scatterplot.   There is a standard plot which displays all these on a single display:
+
+
+```{r, fig.width=7, fig.height=6}
+pairs(usprison.df[, -8])
+```
+
+I have used the construction [,-8] to remove the 8th column. There is no point drawing a scatterplot of anything against a non-continuous variable. Pairwise scatterplots are a marvellous idea, but you do lose a sense of the variance/covariance.
+Check the units carefully.
+
+*** Scatterplots in a bit more detail
+
+All the above are great ways for giving us a very quick idea what is going on in our data. But when we sit down carefully, we need to construct more presentable graphs. We will consider the bivariate scatterplot in some detail. You can do this
+in one of two ways.
+
+#### Base R graphics
+
+The method you are probably most familiar with is the base **R** *plot()* function.
+
+```{r, fig.width=7, fig.height=6}
+plot(usprison.df$black, usprison.df$inc, xlab = "% Black in pop",
+ylab = "Incarceration")
+```
+
+
+
+#### ggplot
+
+First, we load the package and produce a scatterplot using the qplot (quick plot) function:
+
+
+```{r, fig.width=7, fig.height=6}
+require(ggplot2)
+qplot(black, inc, data = usprison.df, xlab = "% Black in pop", ylab = "Incarceration")
+```
+
+
+At this point you will be wondering what the advantages where in using *qplot()*.   In fact, given that horrible grey shaded background which we have to remove, it seems like there are disadvantages. But here's the first. We can save and modify
+the plot.
+
+I start by setting a more scientific theme for the plotting. Then I create an object called *up1*.
+
+```{r, fig.width=7, fig.height=6}
+theme_set(theme_bw())
+up1 <- qplot(black, inc, data = usprison.df, xlab = "% Black in pop", ylab = "Incarceration", main = "US Incarceration Data")
+up1
+```
+
+
+We can even run summary() on the resulting object, we get a load of cryptic information:
+
+```{r}
+summary(up1)
+```
+
+However, the fun comes because of the ease with which we can extend the graphs.
+
+```{r, fig.width=7, fig.height=6}
+up1 + geom_smooth()
+```
+
+
+Now that seems like an easy way of altering a plot to me. (I don't know if you've met scatter plot smoothers, the idea is to plot a line that is some kind of $y$ average corresponding to a set of of nearby $x$ values, and so create a line that gives us some idea what the scatterplot might be trying to tell us.
+For our purposes, this is an entirely descriptive feature.)
+Of more relevance to us is that we can add the fit from a linear model to this plot:
+
+```{r, fig.width=7, fig.height=6}
+up2 <- up1 + geom_smooth(method = "lm")
+up2
+```
+
+
+Now I'm getting somewhere.   Imagine we decided to look at the effect of South/Non-south. We can add this information to a *facet_grid*:
+
+
+```{r, fig.width=7, fig.height=6}
+up2 + facet_grid(. ~ south)
+```
+
+
+And maybe I'd rather colour things in than have separate facets:
+
+```{r}
+up2 + aes(color = as.factor(south))
+```
+
+
+(How do you think I get both separate facts and different colours.
+Finally, we finish throwing as many options as possible at the plot
+
+```{r, fig.width=7, fig.height=6}
+up2 + aes(color = south, shape = south, linetype = south)
+```
+
+Now, there's a clear hint here than in order to understand the relationship between $x$ (percent of black people in the population) and $y$ (the incarceration rate) we need to include information on whether it is a southern or non-southern state.
+
+
+What you need to do:
+--------------------
+
+If you want to check you understand any of this material, try and create suitable scatterplots for a different dataset.   One example is the Zagat New York Restaurant data which you can load as follows.    These data tell us the price of a "standard" meal in a New York Restaurant and the critic rating for the quality of Food, Service, Decor and location (East or not of a key avenue).
+
+
+
+```{r}
+### This will work in interactive mode
+#ny.df <- read.csv("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv")
+
+### You need this to run in knitr mode
+library(RCurl)
+data <- getURL("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv", ssl.verifypeer=0L, followlocation=1L)
+writeLines(data,'tempnyc.csv')
+nyc.df <- read.csv('tempnyc.csv', row.names = 1)
+
+
+```
