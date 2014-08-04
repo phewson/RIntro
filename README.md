@@ -20,3 +20,4 @@ I am working with R version 3.1.1
 I have added the following libraries:
 - ggplot2
 - curl
+- arm

@@ -22,16 +22,16 @@ output: ioslides_presentation
 
 ## How do you use R?
 
-- Emacs has a great IDE - Emacs speaks statistics
-- Rstudio is a very comprehensive IDE
+- Emacs has a great IDE - [Emacs speaks statistics](http://ess.r-project.org/)
+- [Rstudio](www.rstudio.com) is a very comprehensive IDE
 - Various GUI builders possible - if you wanted to construct button clicking possibilities for non-programming colleagues e.g. Shiny, Tcl-Tk (and many many more)
 
 ## How do you develop in R
 
-- There are > 3000 add on packages, and derivative projects such as Bioconductor
-- There are two methods S3 and S4 formalising some kind of object oriented programming
-- There are many ways to drop down into Fortran or C/C++ if you need to speed up a particular routine
-- There are many add on routines for parallel functioning (see relevant task view)
+- There are > 3000 add on packages, and derivative projects such as [Bioconductor](http://bioconductor.org/)
+- There are two methods (S3 and S4) formalising some kind of object oriented programming
+- There are many ways to drop down into Fortran or C/C++ if you need to speed up a particular routine - see [writing R extensions](http://cran.r-project.org/doc/manuals/R-exts.pdf)
+- There are many add on routines for parallel functioning (see [High performance and parallel R task view](http://cran.r-project.org/web/views/HighPerformanceComputing.html)
 
 ## What are we going to do this afternoon
 
@@ -68,11 +68,7 @@ x %*% y
 
 ## Looping
 
-- THis should be familiar, but don't.
-
-
-
-
+- This should be familiar, but don't.
 
 ```{r}
 out <- rep(0,10)
@@ -83,6 +79,9 @@ out[i] <- i^2
 out
 sum(out)
 ```
+
+## Apply
+
 
 ```{r}
 x <- c(1:10)
@@ -104,20 +103,97 @@ sum(output)
 
 # Data
 
+## Reading some data into R
+
 ```{r}
 #nyc.df <- read.csv("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv")
-#write.csv(nyc.df, row.names = FALSE, "c:\\Users\\phewson\\nyc.csv")
-nyc.df <- read.csv("c:\\Users\\phewson\\nyc.csv")
 
+library(RCurl)
+data <- getURL("http://dl.dropboxusercontent.com/u/12691674/stat2402/nyc.csv", ssl.verifypeer=0L, followlocation=1L)
+writeLines(data,'tempnyc.csv')
+nyc.df <- read.csv('tempnyc.csv', row.names = 1)
 head(nyc.df)
-
-pairs(nyc.df[,-c(1,2,7)])
-nyc.lm1 <- lm(Price ~ Food + Decor + Service, data = nyc.df)
-summary(nyc.df)
-plot(nyc.lm1)
 ```
 
 
+## Everything is an object
+
+
+```{r}
+summary(nyc.df)
+```
+
+## Now fit a model
+
+```{r}
+nyc.lm1 <- lm(Price ~ Food + Decor + Service, data = nyc.df)
+summary(nyc.lm1)
+```
+
+## Doing data analysis in R
+
+- Various approaches
+- Keep the script file and data set - the analysis is reproducible
+- Many tools (Sweave, knitr) make literature programming possible
+- Good books advise on approaches (see manuals which come with R as a starting point)
+
+
+
+# Object oriented programming
+
+
+## Estimating $\pi$ by Monte Carlo methods
+
+```{r}
+mcpi.default <- function(n,a=-1,b=1){
+  x <- runif(n,a,b)
+  y <- runif(n,a,b)
+  inside <- length(x[x^2+y^2 < 1])
+  result <- list(x=x,y=y,pi.est=inside/n*4)
+  class(result) <- "mcpi"
+  result
+}  
+  
+mcpi <- function(n,a,b){UseMethod("mcpi")}
+```
+
+
+## We now just needs methods for this object
+
+```{r}
+print.mcpi <- function(out){
+  print(out$pi.est)
+}
+
+plot.mcpi <- function(out){
+  mycol <- rep("red", length(out$x))
+mycol[out$x^2 + out$y^2 < 1] <- "blue"
+  plot(out$x, out$y, pch = 16, col = mycol, 
+       xlab = "x", ylab="y", main= "Monte Carlo simulations")
+  }
+```
+
+## And useage is simple
+
+```{r}
+a.simulation <- mcpi(1000)
+print(a.simulation)
+plot(a.simulation)
+str(a.simulation)
+```
+
+# What now
+
+## There are three tutorial sheets to try out
+
+- Rdata: introduces some data handling / model fitting
+- Rprogramming: sets a programming exercise
+- SomeGGPlotIdeas: introduces another way of visualising data
+
+[https://github.com/phewson/rintro](https://github.com/phewson/rintro)
+
+
+Pick a sheet and start working!
 
 
 
